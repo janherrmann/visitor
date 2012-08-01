@@ -1,0 +1,349 @@
+This library provides an generic cyclic visitor implementation. 
+
+This library does not povide any support for iterating. Any kind 
+of iteration is left to the user inside her/his static visitors.
+As a kind of dcumentation please look in the test cases. All 
+visitors do almost nothing except for identifying some types or
+properties. This is done to ease testing. Of course your visitors
+may do *real* work.
+
+
+1) How does it work?
+Look in "Design Patterns"[GoF95] page 342. There is an example how to use
+a concrete visitor:
+
+    Equipment* component;
+	InventoryVisitor visitor;
+	component->Accept(visitor);
+	cout << "Inventory "
+	     << component->Name()
+	     << visitor.GetInventory();
+		 
+This example shows that the visitor should implement something like 
+a non-member, non-friend function. The (visitor-) object is located 
+on the stack and the result (and arguments) are members of it. 
+A few lines above is the implementation of their InventoryVisitor:
+
+class InventoryVisitor : public EquipmentVisitor {
+public:
+	InventoryVisitor();
+	
+	virtual void VisitFloppyDisk(FloppyDisk*);
+	virtual void VisitCard(Card*);
+	
+	// ..
+private:
+	Inventory _inventory;
+};
+
+void InventoryVisitor::VisitFloppyDisk(FloppyDisk* e) {
+	_inventory.Accumulate(e);
+}
+void InventoryVisitor::VisitChassis(Chassis* e) {
+	_inventory.Accumulate(e);
+}
+
+The Inventory class - not part of their discussion - is 
+not implemented as an function object but _inventory behaves 
+as one. So we can refactor it as an function object with 
+an overloaded operator() accepting references to 
+Equipment objects as argument:
+
+class InventoryVisitor : public EquipmentVisitor {
+public:
+	InventoryVisitor();
+	
+	virtual void VisitFloppyDisk(FloppyDisk& obj) {
+		_inventory(obj);
+	}
+	virtual void VisitCard(Card& obj) {
+		_inventory(obj);
+	}
+	
+	// ..
+private:
+	Inventory _inventory;
+};
+
+Now we can make the function object a template 
+argument to implement other operations:
+
+template<class static_visitor>
+class ConcreteVisitor
+	: EquipmentVisitor
+{
+	static_visitor& sv_;
+	
+	virtual void VisitFloppyDisk(FloppyDisk& obj) {
+		sv_(obj);
+	}
+	
+	// ...
+	
+	ConcreteVisitor(static_visitor& sv)
+		: sv_(sv)
+	{}
+};
+
+With this little template we can now write code 
+like this:
+
+struct InventoryVisitor
+{
+	Something result;
+	
+	// note: all operations are not virtual!
+	
+	void operator()(FloppyDisk& o) { 
+		// do the work here!!
+	}
+	
+	// other operator() - implementation 
+	// and members for holding arguments
+};
+
+Something GetInventory(Equipment* component)
+{
+	InventoryVisitor sv;
+	ConcreteVisitor<InventoryVisitor> cv(sv);
+	Equipment->Accept(cv);
+	return sv.result;
+};
+
+But there is a better variant: making an templated 
+non-member, non-friend accept (best suited in the
+same namespace as Equipment):
+
+template<class static_visitor>
+void accept(Equipment& obj,static_visitor& sv)
+{
+	ConcreteVisitor<static_visitor> v(sv);
+	obj->Accept(v);
+}
+Inventory GetInventory(Equipment& obj)
+{
+	InventoryVisitor sv;
+	accept(obj, sv);
+	return sv.result;
+};
+
+Now the trick is the combination of run time and 
+compile time polymorphism. 
+	1. accept is found via ADL at compile time
+	2. inside accept the right visitor is created 
+	   so only accept needs to know how to create 
+	   concrete visitors
+	3. the double-dispatch happens (runtime polymorphism)
+	4. inside the visit methods the compiler has
+	   static type knowledge again and can choose the best 
+	   operator() via overload resolution. Here you 
+	   can work with templates, inheritance and 
+	   enable_if to use compile time polymorphism.
+	   The static visitor can even be a template.
+With an extra casting policy the implementation 
+can be made const correct. 
+Of course the complete implementation can be generated 
+by the compiler with help of Boost.Preprocessor and 
+Boost.mpl.
+The overhead to a handwritten visitor is one extra 
+construction of an object and asignment of exactly 
+one reference.
+An interesting point is that with this visitor 
+implementation inheritance work as expected. So if you
+extend the visitable hierarchy you have to recompile 
+everything but the compiler will (depending you your
+hierarchy) find for your added class a base class 
+implementations inside your static visitors. 
+You have exactly the same mechanism
+like adding a new class to a non visitable hierarchy:
+you have to check which virtual member functions
+you have to reimplement. 
+
+With this library you have an mechanism for 
+implementing const-correct, non-member, 
+non-friend functions which may be 
+templated and behave like virtual functions
+at the price of a cyclic dependency. 
+For usage please look into the test cases. 
+See cast.hpp for a generic function which implements
+a dynamic_cast replacement with O(1) complexity 
+for visitable classes (two virtual calls). 
+
+Complexity: O(1) 
+In contrast to Lokis visitor which uses multiple 
+inheratance so that visitors grow lineary in size 
+and construction time.
+
+
+2) Typeinfo (type_id.hpp)
+
+With help of the accept function it is posible to map 
+types to an unsigned integral constant (id) which is 
+equivalent to its position in the sequence of visitiable 
+types of their base class. As long as you don't change 
+this sequence these ids are stable. The simple class 
+"type_id" holds these values, has itself value semantics 
+and can be used as a lightweight container for holding 
+and transporting type information. It can be:
+	- default constructed
+	- constructed with an visitor::type<T>
+	- constructed with an unsigned int (representing 
+	  the position)
+	- created with visitor::identify from a visitable
+	  base ( simular typeid)
+It provides comparison operations and streaming can be 
+included as non-member, non_friend. This class should 
+be (not yet tested) constructable in shared memory. 
+As the original visitor it supports (via typeswitch) 
+an accept function. This function is specially usefull 
+to implement factories. Additionaly it is posible to
+implement type traits for accessing compiletime 
+type information at runtime. sizeof_ is an example which 
+is needed for memory allocation (not in the scope of the 
+library) and a generic implementation of operator new
+(will be added later, see create() in type_id.hpp) to 
+create objects codified as integral constants. 
+The static visitor is called with an visitor::type<T> 
+where T is the type at the position id.
+Additionally it implements an conversation function to
+std::type_info.
+Complexity: most operations see Typeswitching
+
+
+3) Typeswitching (accept_unsigned_int.hpp)
+
+Typeswitching is implementated (with help of 
+Boost.Preprocessor)up to an maximum number of
+unsigned ints. Taking the length of an mpl sequence it 
+implements a switch statement in the following way:
+
+switch (i) { // runtime value representing position
+// ...
+	case n : sv(cp.template cast<n>(obj)); break;
+// ...	
+}
+
+for every n in the range from 0 to length of the sequence.
+At this point the runtime value i is equivalent to the 
+constant n. sv is the static visitor (a simple function 
+object), cp is the casting policy (a simple function object)
+which tranforms obj. obj is the original object.
+cp depends on the original type sequence and can transform 
+obj with help of n into a type related to the type codified 
+by i (==n). At the end the compiler chooses a overloaded
+operator() from sv. Dividing the work in this way makes it 
+possible to implement generic static visitors without 
+knowledge of the typesequence. For an example see 
+the accept implementation in type_id.hpp.
+Complexity: is the same as the switch statement (maybe O(1)
+or O(n) or ...) 
+Can be made guaranteed O(1) with cost of 1 index operation and
+1 function call (see static containers).
+
+
+4) Static containers (static_vector.hpp and static_array.hpp)
+
+It is posible to create static arrays of static initialiseable 
+types (see boost::mpl::c_str as an example). This is 
+implemented in static_vector.hpp. It uses static_array (original
+boost.array) for implementing a container interface. 
+A static_vector can be used to map type_id to integral values
+(see sizeof_ in type_id.hpp). In addition it can be used to 
+implement v-ptr like structures at compile-time (storing pointers
+to functions).
+The static_vector is imutable and has the same interface 
+as a const boost.array and the same complexity.
+
+
+5) Multimethods
+
+Multimethods can be implemented with repeated accept calls and 
+static visitors holding recovered type information.
+See accept_n.hpp for an simple implementation and dispatch.hpp
+for my prefered prosible implementation signature.
+
+
+6) Visiting Boost.Variant
+
+It is easy to implement an accept for Boost.Variant. It is 
+located in the visitor namespace. Therefore it can only be 
+used with visitor::accept(variant, staticvisitor) or 
+with accept_1 and accept_2 (see accept_n.hpp).
+Complexity: ???
+
+
+7) Visiting polymorphic base classes and Boost.Any
+
+In general visitable types have to carry all type information.
+Base classes and anys can be made visitable by wrapping
+them into a proxy object which know all (visitable) types and 
+implements an accept function. This function is implemented as 
+an sequence of casts, which are provided through a casting 
+policy. If the cast succeed the static visitor is called. 
+If not the the next type is tried (simular to Loki. see 
+[Alexandrescu] page 268) If none is successfull no further 
+code is executed (can be customized).
+The basic implementation is located in accept_via_cast.hpp, 
+the adaption to polymorphic base classes and boost::any is 
+made in accept_polymorphic.hpp and accept_any.hpp. Adapters
+for visiting polymorphic types via smart pointers are possible.
+For usage see test_005_any.cpp.
+
+Complexity: O(n*x) where n is number of visitable classes and
+x is the complexity of the cast operation. 
+
+Coution: the wrapper acts like an reference and is passed by 
+value. If you need to construct the wrapper one the fly you 
+have to pass a non cont wraped object per value to your 
+functions. See non-const functions in test_006_poly.cpp and
+test_005_any.cpp for examples. 
+
+
+8) Visiting Optionals
+
+It is possible to visit Boost.Optionals. It may be usefull to
+use static visitors for different type of visitable classes.
+They may work with optionals, anys and variants.
+
+Complexity: O(1)
+
+
+9)Self made classes
+
+Normaly it is not possible to use polymorphic objects in 
+shared memory (see Lippmann page 272). But it is
+possible to implement visitable non-polymorphic objects
+in shared memory ( and memory mapped files, ...). The 
+base class only needs a const integral type identifier 
+(see Typeinfo and Typeswitching) and of course a mpl
+foreward sequence containing all visitable types. With 
+this help it is able to use static visitors with
+such polymorphic types. As a drawback all non leaf
+classes have to foreward a type identifier of the 
+constructed object.
+
+Complexity: O(1)
+
+
+10) Visiting other types
+
+It may be usefull to visit other types as well. For example
+you may implement accept for a weak_ptr which automaticaly
+calls lock() and in case of success uses a static visitor.
+
+
+
+References:
+[Alexandrescu] Andrei Alexandrescu 
+    Modern C++ design: generic programming and design patterns applied
+    Addison-Wesley. 2001.    
+[GoF95] Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides. 
+	Design Patterns: Elements of Reusable Object-Oriented Software. 
+	Addison-Wesley. 1995. 
+[Lippmann] Stanley B. Lippmann
+    Inside the C++ object modell.
+	Addison-Wesley. 1996. 
+
+ 
+
+

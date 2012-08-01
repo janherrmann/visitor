@@ -1,0 +1,26 @@
+import testing ;
+
+
+project 
+	: requirements <include>d:/cpp/boost_1_50_0 <include>./
+	;
+
+
+
+
+
+test-suite visitor : 
+	[ run 			tests/test_gofvisitor.cpp ]
+	[ run			tests/test_gofvisitor_type.cpp ]
+	[ run			tests/test_accept_n.cpp ]
+	[ run			tests/test_variant.cpp ]
+	[ run			tests/test_any.cpp ]
+    [ run           tests/test_poly.cpp ]
+    [ run			tests/test_optional.cpp ]
+    [ run           tests/test_crosscast.cpp ]
+    [ run           tests/test_selfmadeclass.cpp ]    
+    [ run           tests/test_type_holder.cpp ]
+    [ compile-fail  tests/test_const_fail.cpp ]
+    ;
+
+    
