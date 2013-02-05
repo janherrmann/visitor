@@ -1,0 +1,19 @@
+import testing ;
+using testing ;
+lib boost_unit_test_framework ;
+
+test-suite visitor : 
+	[ run 			test_gofvisitor.cpp ]
+	[ run			test_gofvisitor_type.cpp ]
+	[ run			test_accept_n.cpp ]
+	[ run			test_variant.cpp ]
+	[ run			test_any.cpp ]
+    [ run           test_poly.cpp ]
+    [ run			test_optional.cpp ]
+    [ run           test_crosscast.cpp ]
+    [ run           test_selfmadeclass.cpp ]    
+    [ run           test_type_holder.cpp ]
+    [ compile-fail  test_const_fail.cpp ]
+    ;
+
+    
