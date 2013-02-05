@@ -1,8 +1,11 @@
 import testing ;
+using testing ;
+lib boost_unit_test_framework ;
 
+use-project /boost : C:/Users/jan/Desktop/CPP/libs/boost_1_52_0 ;
 
 project 
-	: requirements <include>d:/cpp/boost_1_50_0 <include>./
+	: requirements <include>C:/Users/jan/Desktop/CPP/libs/boost_1_52_0 <include>./
 	;
 
 
