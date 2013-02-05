@@ -9,7 +9,7 @@
 #include <boost/any.hpp>
 #include <boost/mpl/vector.hpp>
 
-#include "accept_polymorphic.hpp"
+#include "ad_hoc/poly.hpp"
 
 struct Base {
 	virtual ~Base() {}
@@ -108,7 +108,8 @@ int test_main( int, char *[] )
 	typedef boost::mpl::vector<Derived_B,Derived_A,Derived_A_1> Visittypes2;
 	typedef boost::mpl::vector<Derived_A_1,Derived_A,Derived_B> Visittypes3;
 	
-	using namespace visitor; // for c_wrap
+	using namespace visitor::ad_hoc::poly; // for warp, c_wrap
+	
 
 	BOOST_CHECK	(	is_A(c_wrap<Visittypes1>(cba))				);	
 	BOOST_CHECK	(	is_A(wrap<Visittypes1>(cba))				);	

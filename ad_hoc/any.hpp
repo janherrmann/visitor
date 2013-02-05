@@ -1,5 +1,5 @@
-#ifndef VISITOR_ACCEPT_ANY_HPP
-#define VISITOR_ACCEPT_ANY_HPP
+#ifndef VISITOR_AFD_HOC_ANY_HPP
+#define VISITOR_AFD_HOC_ANY_HPP
 
 // Copyright (c) 2012 Jan Herrmann
 //
@@ -9,10 +9,10 @@
 
 #include <boost/any.hpp>
 
-#include "accept_via_cast.hpp"
+#include "base.hpp"
 
 
-namespace visitor {
+namespace visitor { namespace ad_hoc { namespace any {
 
 	struct any_casting_policy
 	{
@@ -28,17 +28,17 @@ namespace visitor {
 	};
 	
 	template<class sequence>
-	via_cast_visitable_wrapper<
+	visitable_wrapper<
 		sequence,
-		via_cast_visitable_root<
+		base_visitable_root<
 			boost::any,
 			any_casting_policy
 		> 
 	> wrap(boost::any& any)
 	{
-		via_cast_visitable_wrapper<
+		visitable_wrapper<
 			sequence,
-			via_cast_visitable_root<
+			base_visitable_root<
 				boost::any,
 				any_casting_policy
 			> 
@@ -47,17 +47,17 @@ namespace visitor {
 	}
 	
 	template<class sequence>
-	via_cast_visitable_wrapper<
+	visitable_wrapper<
 		sequence,
-		via_cast_visitable_root<
+		base_visitable_root<
 			boost::any const,
 			any_casting_policy
 		> 
 	> wrap(boost::any const& any)
 	{
-		via_cast_visitable_wrapper<
+		visitable_wrapper<
 			sequence,
-			via_cast_visitable_root<
+			base_visitable_root<
 				boost::any const,
 				any_casting_policy
 			> 
@@ -66,17 +66,17 @@ namespace visitor {
 	}
 	
 	template<class sequence>
-	via_cast_visitable_wrapper
+	visitable_wrapper
 		< sequence
-		, via_cast_visitable_root
+		, base_visitable_root
 			< boost::any const
 			, any_casting_policy
 			> 
 		> c_wrap(boost::any const& any)
 	{
-		via_cast_visitable_wrapper<
+		visitable_wrapper<
 			sequence,
-			via_cast_visitable_root<
+			base_visitable_root<
 				boost::any const,
 				any_casting_policy
 			> 
@@ -84,6 +84,6 @@ namespace visitor {
 		return result;
 	}
 
-} // NS visitor
+}}} // NS visitor::ad_hoc::any
 
 #endif

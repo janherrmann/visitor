@@ -1,5 +1,5 @@
-#ifndef VISITOR_ACCEPT_VIA_CAST_HPP
-#define VISITOR_ACCEPT_VIS_CAST_HPP
+#ifndef VISITOR_AH_HOC_BASE_HPP
+#define VISITOR_AH_HOC_BASE_HPP
 
 // Copyright (c) 2012 Jan Herrmann
 //
@@ -20,7 +20,7 @@
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/placeholders.hpp>
 
-namespace visitor {
+namespace visitor { namespace ad_hoc {
 
     namespace impl {
 	
@@ -59,16 +59,16 @@ namespace visitor {
 		{};
 	} // NS impl	
 	
-	template<class base,class casting_policy_>
-	struct via_cast_visitable_root
-		: casting_policy_
+	template<class Base,class CastingPolicy>
+	struct base_visitable_root
+		: CastingPolicy
 	{
-		typedef base base_type;
-		typedef casting_policy_ casting_policy;
+		typedef Base base_type;
+		typedef CastingPolicy casting_policy;
 			
 		base_type& object;
 			
-		via_cast_visitable_root(base_type& obj, casting_policy cp)
+		base_visitable_root(base_type& obj, casting_policy cp)
 			: casting_policy(cp)
 			, object(obj)
 		{}
@@ -80,29 +80,29 @@ namespace visitor {
 		
 	
 	template<class sequence,class root>
-	struct via_cast_visitable_wrapper
+	struct visitable_wrapper
 		: impl::via_cast_visitable_helper<sequence,root>::type
 	{
 		typedef typename impl::via_cast_visitable_helper<sequence,root>::type base;
-		via_cast_visitable_wrapper(typename base::base_type& obj, typename base::casting_policy cp)
+		visitable_wrapper(typename base::base_type& obj, typename base::casting_policy cp)
 			: base(obj, cp)
 		{}
 		
 		using base::accept;			
-	}; // via_cast_visitable_wrapper
+	}; // visitable_wrapper
 		
 	template<class s,class r,class static_visitor>
-	void accept(via_cast_visitable_wrapper<s,r>& obj, static_visitor& sv)
+	void accept(visitable_wrapper<s,r>& obj, static_visitor& sv)
 	{
 		obj.accept(sv);
 	}
 		
 	template<class s,class r,class static_visitor>
-	void accept(via_cast_visitable_wrapper<s,r> const& obj, static_visitor& sv)
+	void accept(visitable_wrapper<s,r> const& obj, static_visitor& sv)
 	{
 		obj.accept(sv);
 	}
 
-} //  NS visitor
+}} //  NS visitor::ad_hoc
 
 #endif

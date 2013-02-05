@@ -11,7 +11,7 @@
 #include <boost/any.hpp>
 #include <boost/mpl/vector.hpp>
 
-#include "accept_any.hpp"
+#include "ad_hoc/any.hpp"
 
 struct is_int_visitor {
 	bool result;
@@ -85,7 +85,7 @@ int test_main( int, char *[] )
 {
 	boost::any amy(4);
 	
-	using namespace visitor;
+	using namespace visitor::ad_hoc::any;
 	typedef boost::mpl::vector<int,float> anytypes;
 		
 	BOOST_CHECK ( !	is_float(wrap<anytypes>(amy))				);
