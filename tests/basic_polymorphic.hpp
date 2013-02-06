@@ -46,14 +46,14 @@ struct Derived_A
 };
 
 struct Derived_A_1
-	: Base
+	: Derived_A
 {
 	VISITOR_GOFVISITOR_VIRTUAL_ACCEPT(MyVisitor)
 	char Data[10];
 };
 
 struct Derived_A_2
-	: Base
+	: Derived_A
 {
 	VISITOR_GOFVISITOR_VIRTUAL_ACCEPT(MyVisitor)
 	char Data[50];
