@@ -13,7 +13,7 @@
 #include "gof_classes.hpp"
 #include "type_id.hpp"
 
-#include "cast.hpp"
+#include "rtti/cast.hpp"
 #include "clone.hpp"
 
 
@@ -85,11 +85,11 @@ int test_main( int, char *[] )
     BOOST_CHECK (   typeid(*create_a1)          ==  typeid(Derived_A_1)         );
 	
 
-    BOOST_CHECK ( visitor::cast<Derived_A*>(&ba)            !=  0                       );
-    BOOST_CHECK ( visitor::cast<Derived_A*>(&ba1)           !=  0                       );
-    BOOST_CHECK ( visitor::cast<Derived_A*>(&bb)            ==  0                       );
+    BOOST_CHECK ( visitor::rtti::cast<Derived_A*>(&ba)      !=  0                       );
+    BOOST_CHECK ( visitor::rtti::cast<Derived_A*>(&ba1)     !=  0                       );
+    BOOST_CHECK ( visitor::rtti::cast<Derived_A*>(&bb)      ==  0                       );
 
-    BOOST_CHECK ( & visitor::cast<Derived_A&>(ba)           !=  0                       );
+    BOOST_CHECK ( & visitor::rtti::cast<Derived_A&>(ba)     !=  0                       );
 
     //BOOST_CHECK_THROW ( visitor::cast<Derived_A&>(bb)       ,   std::bad_cast           );
 

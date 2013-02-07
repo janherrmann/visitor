@@ -1,6 +1,19 @@
+# Copyright (c) 2013 Jan Herrmann
+#
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
 import testing ;
-using testing ;
-lib boost_unit_test_framework ;
+
+project
+    : requirements
+        <library>/boost/test//boost_unit_test_framework
+        <link>static
+        <toolset>gcc-4.8:<define>BOOST_STL_SUPPORTS_NEW_UNICODE_LOCALES
+    ;
+
+build-project rtti ;
 
 test-suite visitor : 
 	[ run 			test_gofvisitor.cpp ]
@@ -10,7 +23,6 @@ test-suite visitor :
 	[ run			test_any.cpp ]
     [ run           test_poly.cpp ]
     [ run			test_optional.cpp ]
-    [ run           test_crosscast.cpp ]
     [ run           test_selfmadeclass.cpp ]    
     [ run           test_type_holder.cpp ]
     [ compile-fail  test_const_fail.cpp ]
