@@ -14,7 +14,7 @@
 #include "type_id.hpp"
 
 #include "rtti/cast.hpp"
-#include "clone.hpp"
+#include "rtti/clone.hpp"
 
 
 int test_main( int, char *[] )  
@@ -96,8 +96,8 @@ int test_main( int, char *[] )
 	id_a=visitor::type<Derived_A>();
 
     
-	std::auto_ptr<Base>         cloned_ba(visitor::clone<Base>(cba));
-	std::auto_ptr<Derived_A>    cloned_da(visitor::clone<Derived_A>(a));
+	std::auto_ptr<Base>         cloned_ba(visitor::rtti::clone<Base>(cba));
+	std::auto_ptr<Derived_A>    cloned_da(visitor::rtti::clone<Derived_A>(a));
 
     BOOST_CHECK (   cloned_ba.get()                         !=  0               );
     BOOST_CHECK (   visitor::identify<Base>(*cloned_ba)     ==  id_a            );
