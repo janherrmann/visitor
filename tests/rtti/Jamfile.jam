@@ -11,5 +11,7 @@ compile-fail cast_fail_1.cpp ;
 compile-fail cast_fail_2.cpp ;
 compile-fail cast_fail_3.cpp ;
 compile-fail cast_fail_4.cpp ;
-    
 compile cast_compile.cpp ;
+
+unit-test clone : clone.cpp ; 
+    
